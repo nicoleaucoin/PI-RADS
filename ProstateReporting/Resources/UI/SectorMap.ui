@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SectorWidget</class>
+ <widget class="QWidget" name="SectorWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>151</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QFrame" name="SectorFrame">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="1" column="0">
+       <widget class="QLabel" name="LRLabel">
+        <property name="text">
+         <string>Left/Right:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="LRComboBox">
+        <property name="toolTip">
+         <string>The prostate is divided into right/left on axial sections by a vertical line drawn through the center (indicated by the prostatic urethra).</string>
+        </property>
+        <item>
+         <property name="text">
+          <string>Left (l)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Right (r)</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="zoneLabel">
+        <property name="toolTip">
+         <string>The prostate is divided into four histologic zones: (a) theanterior fibromuscular stroma, contains no glandular tissue; (b) the transition zone (TZ),surrounding the urethra proximal to the verumontanum, contains 5% of the glandular tissue; (c) the central zone (CZ), surrounding the ejaculatory ducts, contains about 20% of the glandular tissue; and (d) the outer peripheral zone (PZ), contains 70%-80% of the glandular tissue.</string>
+        </property>
+        <property name="text">
+         <string>Zone:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="zoneComboBox">
+        <item>
+         <property name="text">
+          <string>Peripheral Zone (PZ)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Transition Zone (TZ)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Central Zone (CZ)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Anterior Fibromuscular Stroma (AS)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Seminal Vesicles (SV)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Urethral Sphincter (Us)</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="glandLabel">
+        <property name="toolTip">
+         <string>From superior to inferior, the prostate consists of the base (just below the urinary bladder), the midgland, and the apex. </string>
+        </property>
+        <property name="text">
+         <string>Gland Sector:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QComboBox" name="glandComboBox">
+        <item>
+         <property name="text">
+          <string>Base (B)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Midgland (Mg)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Apex (A)</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="APComboBox">
+        <property name="toolTip">
+         <string>The prostate is divided  into anterior/posterior by a horizontal line through the middle of the gland. </string>
+        </property>
+        <item>
+         <property name="text">
+          <string>anterior (a)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>medial posterior (mp)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>lateral posterior (lp)</string>
+         </property>
+        </item>
+	<item>
+         <property name="text">
+          <string>posterior (p)</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="APLabel">
+        <property name="text">
+         <string>Anterior/Posterior:</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+ <slots>
+  <signal>accepted()</signal>
+  <signal>rejected()</signal>
+  <slot>acceptSector()</slot>
+  <slot>rejectSector()</slot>
+ </slots>
+</ui>
