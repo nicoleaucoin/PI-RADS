@@ -48,7 +48,8 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
 
     # Instantiate and connect widgets ...
 
-    self.sectorMapWidget = self.loadSectorMapUi()
+    self.sectorMapWidget = self.loadUI('SectorMap')
+    self.assessmentWidget = self.loadUI('Assessment')
 
     # Set up the sector relationships
     self.SectorMap = None
@@ -163,7 +164,7 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
     self.layout.addWidget(lesionsCollapsibleButton)
 
     # Layout within the dummy collapsible button
-    lesionsFormLayout = qt.QFormLayout(lesionsCollapsibleButton)
+    lesionsLayout = qt.QVBoxLayout(lesionsCollapsibleButton)
 
     #
     # Lesion target list selector
@@ -178,15 +179,31 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
     self.targetListSelector.showChildNodeTypes = False
     self.targetListSelector.setMRMLScene( slicer.mrmlScene )
     self.targetListSelector.setToolTip( "Pick the list of target lesion fiducials.")
-    lesionsFormLayout.addRow("Lesion Target List: ", self.targetListSelector)
+    lesionsLayout.addWidget(self.targetListSelector)
 
     # Sector map
-    lesionsFormLayout.addRow("Prostate sector: ", self.sectorMapWidget)
+    sectorMapLabel = qt.QLabel()
+    sectorMapLabel.setText("Prostate sector:")
+    lesionsLayout.addWidget(sectorMapLabel)
+    lesionsLayout.addWidget(self.sectorMapWidget)
     
     # Add a lesion, pops up a sector widget to set where it is
     self.addLesionButton = qt.QPushButton()
     self.addLesionButton.text = 'Add Lesion'
-    lesionsFormLayout.addRow("", self.addLesionButton)
+    lesionsLayout.addWidget(self.addLesionButton)
+
+
+    #
+    # Assessment Area
+    #
+    assessmentCollapsibleButton = ctk.ctkCollapsibleButton()
+    assessmentCollapsibleButton.text = "Assessment"
+    self.layout.addWidget(assessmentCollapsibleButton)
+
+    # Layout within the dummy collapsible button
+    assessmentLayout = qt.QVBoxLayout(assessmentCollapsibleButton)
+
+    assessmentLayout.addWidget(self.assessmentWidget)
 
     #
     # Set up Connections
@@ -214,14 +231,14 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
     self.layout.addStretch(1)
 
 
-  def loadSectorMapUi(self):
+  def loadUI(self, uiName):
     uiPathBase = os.path.join(os.path.dirname(__file__), 'Resources', 'UI')
-    uiPath = os.path.join(uiPathBase, 'SectorMap.ui')
+    uiPath = os.path.join(uiPathBase, uiName + '.ui')
     uiFile = qt.QFile(uiPath)
     uiFile.open(qt.QFile.ReadOnly)
-    sectorMapWidget = qt.QWidget()
-    sectorMapWidget = self.uiLoader.load(uiFile)
-    return sectorMapWidget
+    widget = qt.QWidget()
+    widget = self.uiLoader.load(uiFile)
+    return widget
   
   def cleanup(self):
     self.removeObservers()
