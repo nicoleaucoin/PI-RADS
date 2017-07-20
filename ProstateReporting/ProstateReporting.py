@@ -50,6 +50,9 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
 
     self.sectorMapWidget = self.loadSectorMapUi()
 
+    # Set up the sector relationships
+    self.SectorMap = None
+    self.initSectorMap()
 
     #
     # Volumes Area
@@ -179,10 +182,6 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
 
     # Sector map
     lesionsFormLayout.addRow("Prostate sector: ", self.sectorMapWidget)
-    self.LRComboBox = self.logic.getChild(self.sectorMapWidget, "LRComboBox")
-    self.ZoneComboBox = self.logic.getChild(self.sectorMapWidget, "zoneComboBox")
-    self.GlandComboBox = self.logic.getChild(self.sectorMapWidget, "glandComboBox")
-    self.APComboBox = self.logic.getChild(self.sectorMapWidget, "APComboBox")
     
     # Add a lesion, pops up a sector widget to set where it is
     self.addLesionButton = qt.QPushButton()
@@ -203,6 +202,7 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
     # Lesions
     self.targetListSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelectTargets)
 
+    # Sector map
     self.LRComboBox.connect("currentIndexChanged(int)", self.onSectorLRChanged)
     self.ZoneComboBox.connect("currentIndexChanged(int)", self.onSectorZoneChanged)
     self.GlandComboBox.connect("currentIndexChanged(int)", self.onSectorGlandChanged)
@@ -244,7 +244,106 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
       return
     # add observations and save tags for later removal
     self.lesionListTags.append(self.lesionList.AddObserver(slicer.vtkMRMLMarkupsNode.MarkupAddedEvent, self.onLesionFiducialAdded))
+
+  def initSectorMap(self):
+    self.SectorMap = {}
+
+    PZDict = {}
+    PZDict['LR'] = ['Right (r)', 'Left (l)']
+    PZDict['AP'] = ['Anterior (a)', 'Medial Posterior (mp)', 'Lateral Posterior (lp)']
+    PZDict['Gland'] = ['Base (B)', 'Midgland (Mg)', 'Apex (A)']
+
+    TZDict = {}
+    TZDict['LR'] = ['Right (r)', 'Left (l)']
+    TZDict['AP'] = ['Anterior (a)', 'Posterior (p)']
+    TZDict['Gland'] = ['Base (B)', 'Midgland (Mg)', 'Apex (A)']
+
+    CZDict = {}
+    CZDict['LR'] = ['Right (r)', 'Left (l)']
+    CZDict['AP'] = []
+    CZDict['Gland'] = [] # ['Base (B)']
+
+
+    ASDict = {}
+    ASDict['LR'] = ['Right (r)', 'Left (l)']
+    ASDict['AP'] = [] # ['Anterior (a)']
+    ASDict['Gland'] = ['Base (B)', 'Midgland (Mg)', 'Apex (A)']
+
     
+    SVDict = {}
+    SVDict['LR'] = ['Right (r)', 'Left (l)']
+    SVDict['AP'] = []
+    SVDict['Gland'] = []
+
+    USDict = {}
+    USDict['LR'] = []
+    USDict['AP'] = []
+    USDict['Gland'] = [] # ['Apex (A)']
+
+
+    self.SectorMap['Peripheral Zone (PZ)'] = PZDict
+    self.SectorMap['Transition Zone (TZ)'] = TZDict
+    self.SectorMap['Central Zone (CZ)'] = CZDict
+    self.SectorMap['Anterior Fibromuscular Stroma (AS)'] = ASDict
+    self.SectorMap['Seminal Vesicles (SV)'] = SVDict
+    self.SectorMap['Urethral Sphincter (US)'] = USDict
+
+
+    # Update the sector map drop down widgets
+    self.ZoneComboBox = self.logic.getChild(self.sectorMapWidget, "zoneComboBox")
+    self.LRComboBox = self.logic.getChild(self.sectorMapWidget, "LRComboBox")
+    self.GlandComboBox = self.logic.getChild(self.sectorMapWidget, "glandComboBox")
+    self.APComboBox = self.logic.getChild(self.sectorMapWidget, "APComboBox")
+
+    self.ZoneComboBox.clear()
+    # add the peripheral zone strings
+    print 'SectorMap keys = ', self.SectorMap.keys()
+    for zone in self.SectorMap:
+      self.ZoneComboBox.addItem(zone)
+    pz = 'Peripheral Zone (PZ)'
+    self.fillComboBoxesFromZone(pz)
+
+    # select the Peripheral zone defaults
+    pzIndex = self.ZoneComboBox.findText(pz)
+    print 'Selecting the PZ: index = ', pzIndex
+    if pzIndex >= 0:
+      self.ZoneComboBox.setCurrentIndex(pzIndex)
+    gIndex = self.GlandComboBox.findText(self.SectorMap[pz]['Gland'][0])
+    if gIndex >= 0:
+      self.GlandComboBox.setCurrentIndex(gIndex)
+    lrIndex =  self.LRComboBox.findText(self.SectorMap[pz]['LR'][0])
+    if lrIndex >= 0:
+      self.LRComboBox.setCurrentIndex(lrIndex)
+    apIndex = self.APComboBox.findText(self.SectorMap[pz]['AP'][0])
+    if apIndex >= 0:
+      self.APComboBox.setCurrentIndex(apIndex)
+
+  def enableDisableComboBox(self, comboBox):
+    if comboBox.count == 0:
+      comboBox.setEnabled(False)
+    else:
+      comboBox.setEnabled(True)
+
+  def fillComboBoxesFromZone(self, zone):
+    if not self.SectorMap.has_key(zone):
+      print 'Invalid zone: ', zone
+      return
+
+    self.GlandComboBox.clear()
+    for gland in self.SectorMap[zone]['Gland']:
+      self.GlandComboBox.addItem(gland)
+    self.enableDisableComboBox(self.GlandComboBox)
+
+    self.LRComboBox.clear()
+    for lr in self.SectorMap[zone]['LR']:
+      self.LRComboBox.addItem(lr)
+    self.enableDisableComboBox(self.LRComboBox)
+
+    self.APComboBox.clear()
+    for ap in self.SectorMap[zone]['AP']:
+      self.APComboBox.addItem(ap)
+    self.enableDisableComboBox(self.APComboBox)
+
   def onSelectTargets(self):
     # update for new fiducial list
     print 'onSelectTargets'
@@ -254,6 +353,7 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
     print 'onSectorZoneChanged: ', index
     txt = self.getSectorCode(self.ZoneComboBox)
     print '\t',txt
+    self.fillComboBoxesFromZone(self.ZoneComboBox.currentText)
       
   def onSectorLRChanged(self, index):
     print 'onSectorLRChanged: ', index
