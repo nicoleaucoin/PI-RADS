@@ -43,13 +43,18 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
 
     self.uiLoader = qt.QUiLoader()
 
+    self.patientName = None
+
     self.lesionList = None
     self.lesionListTags = []
 
     # Instantiate and connect widgets ...
 
+    # Load UI files
+    self.scansWidget = self.loadUI('Scans')
     self.sectorMapWidget = self.loadUI('SectorMap')
     self.assessmentWidget = self.loadUI('Assessment')
+    self.reportWidget = self.loadUI('Report')
 
     # Set up the sector relationships
     self.SectorMap = None
@@ -65,96 +70,36 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
     # Layout within the dummy collapsible button
     scansFormLayout = qt.QFormLayout(scansCollapsibleButton)
 
-    #
-    # T2 volume selector
-    #
-    self.t2VolumeSelector = slicer.qMRMLNodeComboBox()
-    self.t2VolumeSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
-    self.t2VolumeSelector.selectNodeUponCreation = True
-    self.t2VolumeSelector.addEnabled = True
-    self.t2VolumeSelector.removeEnabled = True
-    self.t2VolumeSelector.noneEnabled = True
-    self.t2VolumeSelector.showHidden = False
-    self.t2VolumeSelector.showChildNodeTypes = False
+    # Patient name
+    self.patientNameLabel = qt.QLabel()
+    scansFormLayout.addRow("Patient Name:", self.patientNameLabel)
+
+    # Scans
+    scansFormLayout.addWidget(self.scansWidget)
+
+    self.t2VolumeSelector = self.logic.getChild(self.scansWidget, 't2VolumeSelector')
     self.t2VolumeSelector.setMRMLScene( slicer.mrmlScene )
-    self.t2VolumeSelector.setToolTip( "Pick the T2 Prostate scan.")
-    scansFormLayout.addRow("T2: ", self.t2VolumeSelector)
+    self.t2ScanDateLabel = self.logic.getChild(self.scansWidget, 't2ScanDateLabel')
 
-    #
-    # T1 volume selector
-    #
-    self.t1VolumeSelector = slicer.qMRMLNodeComboBox()
-    self.t1VolumeSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
-    self.t1VolumeSelector.selectNodeUponCreation = True
-    self.t1VolumeSelector.addEnabled = True
-    self.t1VolumeSelector.removeEnabled = True
-    self.t1VolumeSelector.noneEnabled = True
-    self.t1VolumeSelector.showHidden = False
-    self.t1VolumeSelector.showChildNodeTypes = False
+    self.t1VolumeSelector = self.logic.getChild(self.scansWidget, 't1VolumeSelector')
     self.t1VolumeSelector.setMRMLScene( slicer.mrmlScene )
-    self.t1VolumeSelector.setToolTip( "Pick the T1 Prostate scan.")
-    scansFormLayout.addRow("T1: ", self.t1VolumeSelector)
+    self.t1ScanDateLabel = self.logic.getChild(self.scansWidget, 't1ScanDateLabel')
 
-    #
-    # mpMRI volume selector
-    #
-    self.mpMRIVolumeSelector = slicer.qMRMLNodeComboBox()
-    self.mpMRIVolumeSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
-    self.mpMRIVolumeSelector.selectNodeUponCreation = True
-    self.mpMRIVolumeSelector.addEnabled = True
-    self.mpMRIVolumeSelector.removeEnabled = True
-    self.mpMRIVolumeSelector.noneEnabled = True
-    self.mpMRIVolumeSelector.showHidden = False
-    self.mpMRIVolumeSelector.showChildNodeTypes = False
+    self.mpMRIVolumeSelector = self.logic.getChild(self.scansWidget, 'mpMRIVolumeSelector')
     self.mpMRIVolumeSelector.setMRMLScene( slicer.mrmlScene )
-    self.mpMRIVolumeSelector.setToolTip( "Pick the mpMRI Prostate scan.")
-    scansFormLayout.addRow("mpMRI: ", self.mpMRIVolumeSelector)
+    self.mpMRIScanDateLabel = self.logic.getChild(self.scansWidget, 'mpMRIScanDateLabel')
 
-    #
-    # DWI volume selector
-    #
-    self.dwiVolumeSelector = slicer.qMRMLNodeComboBox()
-    self.dwiVolumeSelector.nodeTypes = ["vtkMRMLDiffusionWeightedVolumeNode"]
-    self.dwiVolumeSelector.selectNodeUponCreation = True
-    self.dwiVolumeSelector.addEnabled = True
-    self.dwiVolumeSelector.removeEnabled = True
-    self.dwiVolumeSelector.noneEnabled = True
-    self.dwiVolumeSelector.showHidden = False
-    self.dwiVolumeSelector.showChildNodeTypes = False
+    self.dwiVolumeSelector = self.logic.getChild(self.scansWidget, 'dwiVolumeSelector')
     self.dwiVolumeSelector.setMRMLScene( slicer.mrmlScene )
-    self.dwiVolumeSelector.setToolTip( "Pick the DWI Prostate scan.")
-    scansFormLayout.addRow("DWI: ", self.dwiVolumeSelector)
+    self.dwiScanDateLabel = self.logic.getChild(self.scansWidget, 'dwiScanDateLabel')
 
-    #
-    # ADC volume selector
-    #
-    self.adcVolumeSelector = slicer.qMRMLNodeComboBox()
-    self.adcVolumeSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
-    self.adcVolumeSelector.selectNodeUponCreation = True
-    self.adcVolumeSelector.addEnabled = True
-    self.adcVolumeSelector.removeEnabled = True
-    self.adcVolumeSelector.noneEnabled = True
-    self.adcVolumeSelector.showHidden = False
-    self.adcVolumeSelector.showChildNodeTypes = False
+    self.adcVolumeSelector = self.logic.getChild(self.scansWidget, 'adcVolumeSelector')
     self.adcVolumeSelector.setMRMLScene( slicer.mrmlScene )
-    self.adcVolumeSelector.setToolTip( "Pick the ADC Prostate scan.")
-    scansFormLayout.addRow("ADC: ", self.adcVolumeSelector)
+    self.adcScanDateLabel = self.logic.getChild(self.scansWidget, 'adcScanDateLabel')
 
-    #
-    # DCE volume selector
-    #
-    self.dceVolumeSelector = slicer.qMRMLNodeComboBox()
-    self.dceVolumeSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
-    self.dceVolumeSelector.selectNodeUponCreation = True
-    self.dceVolumeSelector.addEnabled = True
-    self.dceVolumeSelector.removeEnabled = True
-    self.dceVolumeSelector.noneEnabled = True
-    self.dceVolumeSelector.showHidden = False
-    self.dceVolumeSelector.showChildNodeTypes = False
+    self.dceVolumeSelector = self.logic.getChild(self.scansWidget, 'dceVolumeSelector')
     self.dceVolumeSelector.setMRMLScene( slicer.mrmlScene )
-    self.dceVolumeSelector.setToolTip( "Pick the DCE Prostate scan.")
-    scansFormLayout.addRow("DCE: ", self.dceVolumeSelector)
-
+    self.dceScanDateLabel = self.logic.getChild(self.scansWidget, 'dceScanDateLabel')
 
     #
     # Lesions Area
@@ -206,6 +151,21 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
     assessmentLayout.addWidget(self.assessmentWidget)
 
     #
+    # Report Area
+    #
+    self.reportButton = qt.QPushButton()
+    self.reportButton.setText("Report")
+    self.layout.addWidget(self.reportButton)
+
+    # get the report widgets need to fill in
+    self.reportPatientName = self.logic.getChild(self.reportWidget, "patientNameLabel")
+    self.reportScans = self.logic.getChild(self.reportWidget, "patientScanTextEdit")
+    self.reportLesions = self.logic.getChild(self.reportWidget, "patientLesionsTextEdit")
+    self.reportNotes = self.logic.getChild(self.reportWidget, "patientNotesTextEdit")
+    self.reportFile = self.logic.getChild(self.reportWidget, "saveFileBrowser")
+    self.reportSave = self.logic.getChild(self.reportWidget, "savePushButton")
+
+    #
     # Set up Connections
     #
     # Volumes
@@ -226,6 +186,10 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
     self.APComboBox.connect("currentIndexChanged(int)", self.onSectorAPChanged)
 
     self.addLesionButton.connect('clicked(bool)',self.onAddLesion)
+
+    # Report
+    self.reportButton.connect('clicked(bool)', self.onReportButton)
+    self.reportSave.connect('clicked(bool)', self.onReportSave)
 
     # Add vertical spacer
     self.layout.addStretch(1)
@@ -426,19 +390,101 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
     code =  zoneCode + apCode + glandCode + lrCode
     return code
 
+  def getUIDForVolume(self, volumeNode):
+    if volumeNode is None:
+      return None
+    snode = volumeNode.GetStorageNode()
+    if snode is None:
+      print 'getUIDForVolume: volume does not have a storage node'
+      return None
+    fileName = snode.GetFileName()
+    if fileName is None:
+      print 'getUIDForVolume: no file name on storage node'
+      return None
+    uid = slicer.dicomDatabase.instanceForFile(fileName)
+    if uid is None:
+      print 'getUIDForVolume: cannot find uid for file name ', fileName
+      return None
+    return uid
+
+  # Get the patient name for this dicom volume.
+  # Check to be sure that it matches the global patient name if that's set.
+  # Return the patient name on success, None on failure.
+  def checkPatientName(self, volumeNode):
+    if volumeNode is None:
+      print 'checkPatientName: no volume!'
+      return None
+
+    uid = self.getUIDForVolume(volumeNode)
+    if uid is None:
+      print 'checkPatientName: Unable to get DICOM uid for volume ', volumeNode.GetName()
+      return None
+
+    patientName = slicer.dicomDatabase.instanceValue(uid, "0010,0010")
+    if patientName is None:
+      print 'checkPatientName: cannot find patient name tag on instance', uid
+      return None
+    if (self.patientName is not None) and (self.patientName != patientName):
+      print 'checkPatientName: ERROR: Patient name ', patientName, ' does not match already loaded scans patient name: ', self.patientName, '.\nUnsetting patient name, select new volumes.'
+      return None
+    print 'checkPatientName: valid name: ', patientName
+    self.patientName = patientName
+    return self.patientName
+
+  def getScanDate(self, volumeNode):
+    uid = self.getUIDForVolume(volumeNode)
+    if uid is None:
+      print 'checkPatientName: Unable to get DICOM uid for volume ', volumeNode.GetName()
+      return None
+    scanDate = slicer.dicomDatabase.instanceValue(uid, "0008,0022")
+    if scanDate is None or scanDate == '':
+      print 'getScanDate: unable to get the acquisition date for volume ', volumeNode.GetName()
+      return None
+    print 'getScanDate: got valid scan date: ', scanDate
+    return scanDate
+
   def onSelectT2(self):
     vol = self.t2VolumeSelector.currentNode()
+    self.patientNameLabel.setText(self.checkPatientName(vol))
+    self.t2ScanDateLabel.setText(self.getScanDate(vol))
+
   def onSelectT1(self):
-    vol = self.t1.VolumeSelector.currentNode()
+    vol = self.t1VolumeSelector.currentNode()
+    self.patientNameLabel.setText(self.checkPatientName(vol))
+    self.t1ScanDateLabel.setText(self.getScanDate(vol))
+
   def onSelectmpMRI(self):
     vol = self.mpMRIVolumeSelector.currentNode()
+    self.patientNameLabel.setText(self.checkPatientName(vol))
+    self.mpMRIScanDateLabel.setText(self.getScanDate(vol))
+
   def onSelectDWI(self):
     vol = self.dwiVolumeSelector.currentNode()
+    self.patientNameLabel.setText(self.checkPatientName(vol))
+    self.dwiScanDateLabel.setText(self.getScanDate(vol))
+
   def onSelectADC(self):
     vol = self.adcVolumeSelector.currentNode()
+    self.patientNameLabel.setText(self.checkPatientName(vol))
+    self.adcScanDateLabel.setText(self.getScanDate(vol))
+
   def onSelectDCE(self):
     vol = self.dceVolumeSelector.currentNode()
-    
+    self.patientNameLabel.setText(self.checkPatientName(vol))
+    self.dceScanDateLabel.setText(self.getScanDate(vol))
+
+  def onReportButton(self):
+    # pop up the report widget and fill it in
+    self.reportWidget.show()
+    self.reportPatientName.setText(self.patientName)
+
+  def onReportSave(self):
+    # get the selected file name
+    fileName = qt.QFileDialog.getSaveFileName(self, "Save Report", "", "Report files (*.json *.csv)", None)
+    print 'onReportSave: filename = ', fileName
+
+    # save report
+
 
   def onApplyButton(self):
     self.logic.run(self.targetListSelector.currentNode(), self.t2VolumeSelector.currentNode(), self.t1VolumeSelector.currentNode(), self.mpMRIVolumeSelector.currentNode(), self.dwiVolumeSelector.currentNode(), self.adcVolumeSelector.currentNode(), self.dceVolumeSelector.currentNode())

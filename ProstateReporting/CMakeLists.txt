@@ -10,6 +10,8 @@ set(MODULE_PYTHON_RESOURCES
   Resources/Icons/${MODULE_NAME}.png
   Resources/UI/Assessment.ui
   Resources/UI/Findings.ui
+  Resources/UI/Report.ui
+  Resources/UI/Scans.ui
   Resources/UI/SectorMap.ui
   )
 
