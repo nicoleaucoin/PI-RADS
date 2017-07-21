@@ -7,17 +7,17 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>368</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="1">
-    <widget class="QLabel" name="scansLabel">
+   <item row="0" column="3">
+    <widget class="QLabel" name="patientNameLabel">
      <property name="text">
-      <string>Scans:</string>
+      <string/>
      </property>
     </widget>
    </item>
@@ -38,27 +38,10 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="3">
-    <widget class="QLabel" name="patientNameLabel">
+   <item row="1" column="1">
+    <widget class="QLabel" name="scansLabel">
      <property name="text">
-      <string/>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="1">
-    <widget class="QLabel" name="notesLabel">
-     <property name="text">
-      <string>Notes:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="3">
-    <widget class="QPlainTextEdit" name="patientNotesTextEdit"/>
-   </item>
-   <item row="2" column="3">
-    <widget class="QPlainTextEdit" name="patientLesionsTextEdit">
-     <property name="textInteractionFlags">
-      <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+      <string>Scans:</string>
      </property>
     </widget>
    </item>
@@ -69,12 +52,54 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="1">
-    <widget class="QPushButton" name="savePushButton">
-     <property name="text">
-      <string>Save Report</string>
+   <item row="2" column="3">
+    <widget class="QPlainTextEdit" name="patientLesionsTextEdit">
+     <property name="textInteractionFlags">
+      <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
      </property>
     </widget>
+   </item>
+   <item row="4" column="3">
+    <widget class="QPlainTextEdit" name="patientNotesTextEdit"/>
+   </item>
+   <item row="4" column="1">
+    <widget class="QLabel" name="notesLabel">
+     <property name="text">
+      <string>Notes:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QLabel" name="assessmentLabel">
+     <property name="text">
+      <string>Assessment:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="3">
+    <widget class="QPlainTextEdit" name="patientAssessmentTextEdit">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1" colspan="3">
+    <layout class="QGridLayout" name="buttonLayout">
+     <item row="0" column="0">
+      <widget class="QPushButton" name="savePushButton">
+       <property name="text">
+        <string>Save Report</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QPushButton" name="cancelPushButton">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

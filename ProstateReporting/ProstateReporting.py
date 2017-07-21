@@ -25,8 +25,10 @@ class ProstateReporting(ScriptedLoadableModule):
     It allows a user to categorise lesions.
     """
     self.parent.acknowledgementText = """
-    
-""" # replace with organization, grant and thanks.
+    Information given in this module is based on PI-RADS(tm) Prostate
+    Imaging - Reporting and Data System 2015, version 2, from the American
+    College of Radiology.
+    """ # replace with organization, grant and thanks.
 
 #
 # ProstateReportingWidget
@@ -90,10 +92,6 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
     self.t1VolumeSelector.setMRMLScene( slicer.mrmlScene )
     self.t1ScanDateLabel = self.logic.getChild(self.scansWidget, 't1ScanDateLabel')
 
-    self.mpMRIVolumeSelector = self.logic.getChild(self.scansWidget, 'mpMRIVolumeSelector')
-    self.mpMRIVolumeSelector.setMRMLScene( slicer.mrmlScene )
-    self.mpMRIScanDateLabel = self.logic.getChild(self.scansWidget, 'mpMRIScanDateLabel')
-
     self.dwiVolumeSelector = self.logic.getChild(self.scansWidget, 'dwiVolumeSelector')
     self.dwiVolumeSelector.setMRMLScene( slicer.mrmlScene )
     self.dwiScanDateLabel = self.logic.getChild(self.scansWidget, 'dwiScanDateLabel')
@@ -116,31 +114,40 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
     # Layout within the dummy collapsible button
     lesionsLayout = qt.QVBoxLayout(lesionsCollapsibleButton)
 
-    #
-    # Lesion target list selector
-    #
-    self.targetListSelector = slicer.qMRMLNodeComboBox()
-    self.targetListSelector.nodeTypes = ["vtkMRMLMarkupsFiducialNode"]
-    self.targetListSelector.selectNodeUponCreation = True
-    self.targetListSelector.addEnabled = True
-    self.targetListSelector.removeEnabled = False
-    self.targetListSelector.noneEnabled = False
-    self.targetListSelector.showHidden = False
-    self.targetListSelector.showChildNodeTypes = False
-    self.targetListSelector.setMRMLScene( slicer.mrmlScene )
-    self.targetListSelector.setToolTip( "Pick the list of target lesion fiducials.")
-    lesionsLayout.addWidget(self.targetListSelector)
-
     # Sector map
     sectorMapLabel = qt.QLabel()
     sectorMapLabel.setText("Prostate sector:")
     lesionsLayout.addWidget(sectorMapLabel)
     lesionsLayout.addWidget(self.sectorMapWidget)
-    
-    # Add a lesion, pops up a sector widget to set where it is
+
+    # Lesion target list
+    if 0:
+      self.targetListSelector = slicer.qMRMLNodeComboBox()
+      self.targetListSelector.nodeTypes = ["vtkMRMLMarkupsFiducialNode"]
+      self.targetListSelector.selectNodeUponCreation = True
+      self.targetListSelector.addEnabled = True
+      self.targetListSelector.removeEnabled = False
+      self.targetListSelector.noneEnabled = False
+      self.targetListSelector.showHidden = False
+      self.targetListSelector.showChildNodeTypes = False
+      self.targetListSelector.setMRMLScene( slicer.mrmlScene )
+      self.targetListSelector.setToolTip( "Pick the list of target lesion fiducials.")
+      lesionsLayout.addWidget(self.targetListSelector)
+
+    # Add a lesion, will create a list if necessary. Will name it according
+    # to sector selection
     self.addLesionButton = qt.QPushButton()
     self.addLesionButton.text = 'Add Lesion'
     lesionsLayout.addWidget(self.addLesionButton)
+
+    # show the lesions in a table
+    self.targetTableWidget = slicer.qSlicerSimpleMarkupsWidget()
+    self.targetTableWidget.setMRMLScene( slicer.mrmlScene )
+    lesionsLayout.addWidget(self.targetTableWidget)
+    self.targetListSelector = self.logic.getChild(self.targetTableWidget, "MarkupsFiducialNodeComboBox")
+    # hide the place button as want to rename fids when adding
+    placeWidget = self.logic.getChild(self.targetTableWidget, "PlaceButton")
+    placeWidget.hide()
 
 
     #
@@ -154,6 +161,7 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
     assessmentLayout = qt.QVBoxLayout(assessmentCollapsibleButton)
 
     assessmentLayout.addWidget(self.assessmentWidget)
+    self.assessmentComboBox = self.logic.getChild(self.assessmentWidget, "assessmentComboBox")
 
     #
     # Report Area
@@ -164,19 +172,18 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
 
     # get the report widgets need to fill in
     self.reportPatientName = self.logic.getChild(self.reportWidget, "patientNameLabel")
-    self.reportScans = self.logic.getChild(self.reportWidget, "patientScanTextEdit")
+    self.reportScans = self.logic.getChild(self.reportWidget, "patientScansTextEdit")
     self.reportLesions = self.logic.getChild(self.reportWidget, "patientLesionsTextEdit")
+    self.reportAssessment = self.logic.getChild(self.reportWidget, "patientAssessmentTextEdit")
     self.reportNotes = self.logic.getChild(self.reportWidget, "patientNotesTextEdit")
-    self.reportFile = self.logic.getChild(self.reportWidget, "saveFileBrowser")
     self.reportSave = self.logic.getChild(self.reportWidget, "savePushButton")
-
+    self.reportCancel = self.logic.getChild(self.reportWidget, "cancelPushButton")
     #
     # Set up Connections
     #
     # Volumes
     self.t2VolumeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelectT2)
     self.t1VolumeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelectT1)
-    self.mpMRIVolumeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelectmpMRI)
     self.dwiVolumeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelectDWI)
     self.adcVolumeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelectADC)
     self.dceVolumeSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelectDCE)
@@ -195,6 +202,7 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
     # Report
     self.reportButton.connect('clicked(bool)', self.onReportButton)
     self.reportSave.connect('clicked(bool)', self.onReportSave)
+    self.reportCancel.connect('clicked(bool)', self.onReportCancel)
 
     # Add vertical spacer
     self.layout.addStretch(1)
@@ -462,11 +470,6 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
     self.patientNameLabel.setText(self.checkPatientName(vol))
     self.t1ScanDateLabel.setText(self.getScanDate(vol))
 
-  def onSelectmpMRI(self):
-    vol = self.mpMRIVolumeSelector.currentNode()
-    self.patientNameLabel.setText(self.checkPatientName(vol))
-    self.mpMRIScanDateLabel.setText(self.getScanDate(vol))
-
   def onSelectDWI(self):
     vol = self.dwiVolumeSelector.currentNode()
     self.patientNameLabel.setText(self.checkPatientName(vol))
@@ -484,8 +487,59 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
 
   def onReportButton(self):
     # pop up the report widget and fill it in
+    self.reportPatientName.setText('')
+    self.reportScans.clear()
+    self.reportLesions.clear()
+    self.reportAssessment.clear()
+    # TBD: clear notes?
+    # self.reportNotes.clear()
+
     self.reportWidget.show()
+
+    # Patient Name
     self.reportPatientName.setText(self.patientName)
+
+    # Scans
+    scansString = 'Selected Scans:\n'
+
+    vol = self.t2VolumeSelector.currentNode()
+    if vol is not None:
+      scansString = scansString + '\nT2:\n' + vol.GetName() + '\nAcquired on ' + self.t2ScanDateLabel.text + '\n'
+
+    vol = self.t1VolumeSelector.currentNode()
+    if vol is not None:
+      scansString = scansString + '\nT1:\n' + vol.GetName() + '\nAcquired on ' + self.t1ScanDateLabel.text + '\n'
+
+    vol = self.dwiVolumeSelector.currentNode()
+    if vol is not None:
+      scansString = scansString + '\nDWI:\n' + vol.GetName() + '\nAcquired on ' + self.dwiScanDateLabel.text + '\n'
+
+    vol = self.adcVolumeSelector.currentNode()
+    if vol is not None:
+      scansString = scansString + '\nADC:\n' + vol.GetName() + '\nAcquired on ' + self.adcScanDateLabel.text + '\n'
+
+    vol = self.dceVolumeSelector.currentNode()
+    if vol is not None:
+      scansString = scansString + '\nDCE:\n' + vol.GetName() + '\nAcquired on ' + self.DCEScanDateLabel.text + '\n'
+
+    self.reportScans.appendPlainText(scansString)
+
+    # Lesions
+    lesionsString = 'Selected Lesions:\n\n'
+    lesionList = self.targetListSelector.currentNode()
+    if lesionList is not None:
+      numberOfLesions = lesionList.GetNumberOfFiducials()
+      for i in range(numberOfLesions):
+        pos = [0,0,0]
+        lesionList.GetNthFiducialPosition(i, pos)
+        posStr = '(%.3f, %.3f, %.3f)' % (pos[0], pos[1], pos[2])
+        lesionsString = lesionsString + lesionList.GetNthFiducialLabel(i) + "  " + posStr + "\n"
+
+    self.reportLesions.appendPlainText(lesionsString)
+
+    # Assessment
+    assessmentString = self.assessmentComboBox.currentText
+    self.reportAssessment.appendPlainText(assessmentString)
 
   def onReportSave(self):
     # get the selected file name
@@ -501,9 +555,11 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
 
     # save report
 
+  def onReportCancel(self):
+    self.reportWidget.close()
 
   def onApplyButton(self):
-    self.logic.run(self.targetListSelector.currentNode(), self.t2VolumeSelector.currentNode(), self.t1VolumeSelector.currentNode(), self.mpMRIVolumeSelector.currentNode(), self.dwiVolumeSelector.currentNode(), self.adcVolumeSelector.currentNode(), self.dceVolumeSelector.currentNode())
+    self.logic.run(self.targetListSelector.currentNode(), self.t2VolumeSelector.currentNode(), self.t1VolumeSelector.currentNode(), self.dwiVolumeSelector.currentNode(), self.adcVolumeSelector.currentNode(), self.dceVolumeSelector.currentNode())
 
 #
 # ProstateReportingLogic
@@ -543,7 +599,7 @@ class ProstateReportingLogic(ScriptedLoadableModuleLogic):
                 return resulting_widget
         return None
 
-  def run(self, t2Volume, t1Volume, mpMRIVolume, dwiVolume, adcVolume, dceVolume, targetList):
+  def run(self, t2Volume, t1Volume, dwiVolume, adcVolume, dceVolume, targetList):
     """
     Run the actual algorithm
     """
