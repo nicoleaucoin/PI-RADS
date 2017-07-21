@@ -3,6 +3,7 @@ import unittest
 import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 import logging
+from datetime import datetime
 
 #
 # ProstateReporting
@@ -68,14 +69,18 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
     self.layout.addWidget(scansCollapsibleButton)
 
     # Layout within the dummy collapsible button
-    scansFormLayout = qt.QFormLayout(scansCollapsibleButton)
+    scansLayout = qt.QVBoxLayout(scansCollapsibleButton)
 
     # Patient name
-    self.patientNameLabel = qt.QLabel()
-    scansFormLayout.addRow("Patient Name:", self.patientNameLabel)
+    patientNameLayout = qt.QHBoxLayout()
+    patientNameLayout.addWidget(qt.QLabel("Patient Name:"))
+    self.patientNameLabel = qt.QLabel("")
+    patientNameLayout.addWidget(self.patientNameLabel)
+
+    scansLayout.addLayout(patientNameLayout)
 
     # Scans
-    scansFormLayout.addWidget(self.scansWidget)
+    scansLayout.addWidget(self.scansWidget)
 
     self.t2VolumeSelector = self.logic.getChild(self.scansWidget, 't2VolumeSelector')
     self.t2VolumeSelector.setMRMLScene( slicer.mrmlScene )
@@ -441,6 +446,10 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
       print 'getScanDate: unable to get the acquisition date for volume ', volumeNode.GetName()
       return None
     print 'getScanDate: got valid scan date: ', scanDate
+    # Format it a bit more nicely. According to the DICOM standard this
+    # attribute is in the format yyyymmdd
+    datetime_object = datetime.strptime(scanDate, "%Y%m%d")
+    scanDate = datetime_object.date()
     return scanDate
 
   def onSelectT2(self):
@@ -480,7 +489,14 @@ class ProstateReportingWidget(ScriptedLoadableModuleWidget):
 
   def onReportSave(self):
     # get the selected file name
-    fileName = qt.QFileDialog.getSaveFileName(self, "Save Report", "", "Report files (*.json *.csv)", None)
+    # use a scan directory parent as suggestion
+    dirHint = ''
+    vol = self.t2VolumeSelector.currentNode()
+    if vol is not None:
+      volumeFile = vol.GetStorageNode().GetFileName()
+      dirHint = os.path.dirname(volumeFile)
+    filterString = 'Report files (*.json *.csv *.html)'
+    fileName = qt.QFileDialog.getSaveFileName(self, "Save Report", dirHint, filterString)
     print 'onReportSave: filename = ', fileName
 
     # save report
